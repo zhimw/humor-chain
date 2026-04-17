@@ -58,6 +58,61 @@ export async function updateFlavor(
   return { success: true };
 }
 
+export async function duplicateFlavor(
+  sourceId: number,
+  newSlug: string
+): Promise<ActionResult> {
+  const { supabase } = await requireToolAccess();
+
+  const slug = newSlug.trim();
+  if (!slug) return { error: 'Slug is required.' };
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    return { error: 'Slug must be lowercase letters, numbers, and hyphens only.' };
+  }
+
+  // Fetch source flavor
+  const { data: source, error: sourceError } = await supabase
+    .from('humor_flavors')
+    .select('description')
+    .eq('id', sourceId)
+    .single();
+
+  if (sourceError || !source) return { error: 'Source flavor not found.' };
+
+  // Create the new flavor
+  const { data: newFlavor, error: insertError } = await supabase
+    .from('humor_flavors')
+    .insert({ slug, description: source.description })
+    .select('id')
+    .single();
+
+  if (insertError) {
+    if (insertError.code === '23505') return { error: 'A flavor with this slug already exists.' };
+    return { error: insertError.message };
+  }
+
+  // Fetch all steps from source
+  const { data: steps, error: stepsError } = await supabase
+    .from('humor_flavor_steps')
+    .select(
+      'order_by, llm_temperature, llm_input_type_id, llm_output_type_id, llm_model_id, humor_flavor_step_type_id, llm_system_prompt, llm_user_prompt, description'
+    )
+    .eq('humor_flavor_id', sourceId)
+    .order('order_by', { ascending: true });
+
+  if (stepsError) return { error: stepsError.message };
+
+  // Insert cloned steps under the new flavor
+  if (steps && steps.length > 0) {
+    const clonedSteps = steps.map((s) => ({ ...s, humor_flavor_id: newFlavor.id }));
+    const { error: cloneError } = await supabase.from('humor_flavor_steps').insert(clonedSteps);
+    if (cloneError) return { error: cloneError.message };
+  }
+
+  revalidatePath('/flavors');
+  return { success: true };
+}
+
 export async function deleteFlavor(id: number): Promise<ActionResult> {
   const { supabase } = await requireToolAccess();
 

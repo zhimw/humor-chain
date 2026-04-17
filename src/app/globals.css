@@ -187,7 +187,6 @@ a:hover {
 .page-container {
   padding: 32px;
   flex: 1;
-  max-width: 1200px;
   width: 100%;
 }
 
@@ -504,6 +503,7 @@ textarea.input {
    ============================================= */
 
 .table-wrapper {
+  width: 100%;
   overflow-x: auto;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
@@ -547,6 +547,7 @@ textarea.input {
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
 }
 
 /* =============================================
@@ -1000,4 +1001,86 @@ textarea.input {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-dim);
+}
+
+/* =============================================
+   RESPONSIVE — FLAVORS TABLE
+   ============================================= */
+
+/* Ensure the table wrapper always stretches full width */
+.flavors-table-root {
+  width: 100%;
+}
+
+.flavors-search-bar {
+  margin-bottom: 16px;
+}
+
+.flavors-search-bar .input {
+  max-width: 360px;
+  width: 100%;
+}
+
+/* In-header email filter */
+.th-with-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.th-filter-input {
+  display: block;
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  line-height: 1.4;
+}
+
+.th-filter-input::placeholder {
+  color: var(--text-dim);
+}
+
+.th-filter-input:focus {
+  border-color: var(--primary);
+}
+
+/* Tablet: ≤ 900px — hide Created date column */
+@media (max-width: 900px) {
+  .col-hide-tablet {
+    display: none;
+  }
+}
+
+/* Mobile: ≤ 600px — also hide Description and Steps */
+@media (max-width: 600px) {
+  .col-hide-mobile {
+    display: none;
+  }
+
+  .page-container {
+    padding: 16px;
+  }
+
+  .flavors-search-bar .input {
+    max-width: 100%;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 8px;
+  }
+
+  .table-actions {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
 }
