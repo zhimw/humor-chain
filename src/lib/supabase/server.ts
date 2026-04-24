@@ -38,12 +38,27 @@ export type Profile = {
 export async function requireToolAccess() {
   const supabase = createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user'];
+  let userError: Awaited<ReturnType<typeof supabase.auth.getUser>>['error'];
 
-  if (userError || !user) {
+  try {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+    userError = result.error;
+  } catch (e) {
+    // Network-level failure (fetch failed, DNS error, etc.) — do not wipe the
+    // session by redirecting to the login page; surface a 503-style error instead.
+    console.error('[requireToolAccess] getUser network error:', e);
+    throw new Error('Unable to reach the auth service. Please refresh the page.');
+  }
+
+  if (userError) {
+    // Auth-specific errors (invalid JWT, expired token with no refresh, etc.)
+    // For these we do want to send the user back to the login gate.
+    redirect('/');
+  }
+
+  if (!user) {
     redirect('/');
   }
 

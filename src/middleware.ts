@@ -29,8 +29,13 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh the session — do NOT check auth here, just refresh tokens
-  await supabase.auth.getUser();
+  // Refresh the session — do NOT check auth here, just refresh tokens.
+  // Wrap in try/catch so a transient network error never breaks the request pipeline.
+  try {
+    await supabase.auth.getUser();
+  } catch (e) {
+    console.error('[middleware] getUser network error (session refresh skipped):', e);
+  }
 
   return supabaseResponse;
 }
